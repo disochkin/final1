@@ -45,6 +45,7 @@ def request_json(url, params):
         return result
     return []
 
+
 def get_id(url, params):
     data_json = vk_request(url, params).json()
     if list(data_json.keys())[0] == "response":
@@ -65,12 +66,12 @@ def filter_user_group(user_group_id, friends_id):
 def get_unique_groups(group_info, user_group_id):
     def filter_remove_unnecessary(input_data):
         return input_data["id"] in user_group_id
+
     return list(filter(filter_remove_unnecessary, group_info))
 
 
 def main():
     token = input("Введите токен: ")
-
 
     # user = "eshmargunov"
     user = 2217196
@@ -87,11 +88,12 @@ def main():
                                           {"access_token": token, "v": 5.101, "user_id": user_id}))
         # получаем список с расширенной информацией о группах пользователя
         group_detailed_info = request_json('https://api.vk.com/method/groups.get',
-                                             {"access_token": token, "v": 5.101,
-                                              "user_id": user_id, "extended": "1", "fields": "members_count"})
+                                           {"access_token": token, "v": 5.101,
+                                            "user_id": user_id, "extended": "1", "fields": "members_count"})
         # из списка id групп пользователя удаляем группы которые есть у друга
         user_group_ids = filter_user_group(user_group_ids, friends_id)
-        # в списке групп с расширенной информацией оставляем только группы с id которые не встретились ни у кого из друзей
+        # в списке групп с расширенной информацией оставляем только группы с id которые не встретились ни у кого из
+        # друзей
         unique_groups = get_unique_groups(group_detailed_info, user_group_ids)
         result = list()
         # формируем список с информацией по группам
@@ -106,6 +108,7 @@ def main():
         print("Работа программы завершена успешно.")
     except:
         print("Работа программы завершена с ошибкой.")
+
 
 if __name__ == '__main__':
     main()
