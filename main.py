@@ -32,11 +32,9 @@ def vk_request(url, params):
                 return rs
         except requests.exceptions.ConnectTimeout:
             print("Ошибка ConnectTimeout")
-            time.sleep(1)
             continue
         except requests.exceptions.ConnectionError:
             print("Ошибка ConnectionError")
-            time.sleep(1)
             continue
 
 
