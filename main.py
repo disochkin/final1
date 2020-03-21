@@ -3,21 +3,11 @@ from urllib.parse import urlencode
 import time
 import json
 
-OAUTH_URL = "https://oauth.vk.com/authorize"
-OAUTH_PARAMS = {
-    "client_id": 7247906,
-    "redirect_uri": "",
-    "display": "page",
-    "response_type": "token",
-    "scope": "status,friends"
-}
-print("?".join(
-    (OAUTH_URL, urlencode(OAUTH_PARAMS))
-))
-token = ""
+common_params = {}
 
 
-def vk_request(url, params):
+def vk_request(url, additional_params):
+    params = dict(list(common_params.items()) + list(additional_params.items()))
     while True:
         try:
             rs = requests.get(url, params)
@@ -38,7 +28,8 @@ def vk_request(url, params):
             continue
 
 
-def request_json(url, params):
+def request_json(url, additional_params):
+    params = dict(list(common_params.items()) + list(additional_params.items()))
     data_json = vk_request(url, params).json()
     if list(data_json.keys())[0] == "response":
         result = data_json["response"]["items"]
@@ -58,7 +49,7 @@ def get_id(url, params):
 def filter_user_group(user_group_id, friends_id):
     for friend in friends_id:
         friend_group_id = request_json('https://api.vk.com/method/groups.get',
-                                       {"access_token": token, "v": 5.101, "user_id": friend})
+                                       {"user_id": friend})
         user_group_id.difference_update(set(friend_group_id))
     return user_group_id
 
@@ -66,30 +57,45 @@ def filter_user_group(user_group_id, friends_id):
 def get_unique_groups(group_info, user_group_id):
     def filter_remove_unnecessary(input_data):
         return input_data["id"] in user_group_id
-
     return list(filter(filter_remove_unnecessary, group_info))
 
 
-def main():
-    token = input("Введите токен: ")
+def get_oauth_string(app_id):
+    OAUTH_URL = "https://oauth.vk.com/authorize"
+    OAUTH_PARAMS = {
+        "client_id": app_id,
+        "redirect_uri": "",
+        "display": "page",
+        "response_type": "token",
+        "scope": "status,friends"
+    }
+    return ("?".join(
+        (OAUTH_URL, urlencode(OAUTH_PARAMS))
+    ))
 
-    # user = "eshmargunov"
-    user = 2217196
+
+def main():
     try:
-        user_group_ids = set()
-        friend_group_id = set()
+        # id приложения
+        app_id = 7247906
+        # ссылка для получения токена авторизации
+        print(get_oauth_string(app_id))
+        # данные искомого пользователя
+        # user = "eshmargunov"
+        user = 171691064
+        token = input("Введите токен: ")
+
+        common_params.update({"access_token": token, "v": "5.101"})
         # получаем id пользователя
         user_id = int(
-            get_id('https://api.vk.com/method/users.get', {"access_token": token, "v": 5.101, "user_ids": user}))
+            get_id("https://api.vk.com/method/users.get",  {"user_ids": user}))
         # получаем список друзей
-        friends_id = request_json('https://api.vk.com/method/friends.get', {"access_token": token, "v": 5.101})
+        friends_id = request_json('https://api.vk.com/method/friends.get', {})
         # получаем список id групп пользователя
-        user_group_ids = set(request_json('https://api.vk.com/method/groups.get',
-                                          {"access_token": token, "v": 5.101, "user_id": user_id}))
+        user_group_ids = set(request_json('https://api.vk.com/method/groups.get', {"user_id": user_id}))
         # получаем список с расширенной информацией о группах пользователя
         group_detailed_info = request_json('https://api.vk.com/method/groups.get',
-                                           {"access_token": token, "v": 5.101,
-                                            "user_id": user_id, "extended": "1", "fields": "members_count"})
+                                           {"user_id": user_id, "extended": "1", "fields": "members_count"})
         # из списка id групп пользователя удаляем группы которые есть у друга
         user_group_ids = filter_user_group(user_group_ids, friends_id)
         # в списке групп с расширенной информацией оставляем только группы с id которые не встретились ни у кого из
