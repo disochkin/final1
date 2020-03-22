@@ -12,14 +12,15 @@ def vk_request(url, additional_params):
         try:
             rs = requests.get(url, params)
             print(".")
-            if rs.status_code != 200:
-                print("Ошибка, Код ответа: ", rs.status_code)
-                return ""
-            elif rs.status_code == 6:
+            if rs.status_code == 6:
+                print("Слишком много запросов, пауза. ", rs.status_code)
                 time.sleep(0.5)
                 continue
-            else:
+            elif rs.status_code == 200:
                 return rs
+            else:
+                print("Ошибка, Код ответа: ", rs.status_code)
+                return ""
         except requests.exceptions.ConnectTimeout:
             print("Ошибка ConnectTimeout")
             continue
@@ -84,13 +85,12 @@ def main():
         # user = "eshmargunov"
         user = 171691064
         token = input("Введите токен: ")
-
         common_params.update({"access_token": token, "v": "5.101"})
         # получаем id пользователя
         user_id = int(
             get_id("https://api.vk.com/method/users.get",  {"user_ids": user}))
         # получаем список друзей
-        friends_id = request_json('https://api.vk.com/method/friends.get', {})
+        friends_id = request_json('https://api.vk.com/method/friends.get', {"user_id": user})
         # получаем список id групп пользователя
         user_group_ids = set(request_json('https://api.vk.com/method/groups.get', {"user_id": user_id}))
         # получаем список с расширенной информацией о группах пользователя
