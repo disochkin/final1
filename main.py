@@ -12,9 +12,9 @@ def vk_request(url, additional_params):
         try:
             rs = requests.get(url, params)
             print(".")
-            if rs.status_code == 6:
-                print("Слишком много запросов, пауза. ", rs.status_code)
-                time.sleep(0.5)
+            if 'error' in rs.json() and 'error_code' in rs.json()['error'] and rs.json()['error']['error_code'] == 6:
+                print("Слишком много запросов, пауза.")
+                time.sleep(1)
                 continue
             elif rs.status_code == 200:
                 return rs
@@ -48,6 +48,7 @@ def get_id(url, params):
 
 
 def filter_user_group(user_group_id, friends_id):
+    print(friends_id)
     for friend in friends_id:
         friend_group_id = request_json('https://api.vk.com/method/groups.get',
                                        {"user_id": friend})
